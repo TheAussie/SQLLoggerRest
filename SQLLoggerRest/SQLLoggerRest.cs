@@ -63,70 +63,116 @@ namespace SQLLoggerRest
         public static RestObject getStats(RestRequestArgs args)
         {
             LogStat rec;
-            if (TShock.DB.GetSqlType() == SqlType.Sqlite)
-                return new RestObject("400") { Response = "Not allowed using SQLite database", };
+            string sql = "";
             if (!TShock.Config.UseSqlLogs)
                 return new RestObject("400") { Response = "UseSqlLogs not set to true.", };
 
             DatabaseStat dbStat = new DatabaseStat();
-            string sql = "SELECT SUM( data_length + index_length) / 1024 / 1024 as Size FROM information_schema.TABLES where table_schema = \"tshock\"";
-            try
+
+            if (TShock.DB.GetSqlType() == SqlType.Mysql)
             {
-                using (var reader = TShock.DB.QueryReader(sql))
+                dbStat.DBType = "MySQL";
+                sql = "SELECT SUM( data_length + index_length) / 1024 / 1024 as Size FROM information_schema.TABLES where table_schema = \"tshock\"";
+                try
                 {
-                    if (reader.Read())
-                        dbStat.DBSize = reader.Get<double>("Size");
-                }
-            }
-            catch (Exception ex)
-            {
-                TShock.Log.Error(ex.ToString());
-                Console.WriteLine(ex.StackTrace);
-            }
-            sql = "SELECT table_rows as Rows, data_length, index_length, round(((data_length + index_length) / 1024 / 1024),2) as Size FROM information_schema.TABLES WHERE table_schema = \"tshock\" and table_name = \"logs\"";
-           try
-            {
-                using (var reader = TShock.DB.QueryReader(sql))
-                {
-                    if (reader.Read())
+                    using (var reader = TShock.DB.QueryReader(sql))
                     {
-                        dbStat.TableRows = reader.Get<int>("Rows");
-                        dbStat.TableSize = reader.Get<double>("Size");
+                        if (reader.Read())
+                            dbStat.DBSize = reader.Get<double>("Size");
                     }
                 }
-            }
-           catch (Exception ex)
-           {
-               TShock.Log.Error(ex.ToString());
-               Console.WriteLine(ex.StackTrace);
-           }
-           sql = "select count(id) as Count, year(timestamp) as Year, month(TimeStamp) as Month from logs group by year(timestamp), month(TimeStamp)";
+                catch (Exception ex)
+                {
+                    TShock.Log.Error(ex.ToString());
+                    Console.WriteLine(ex.StackTrace);
+                }
+                sql = "SELECT table_rows as Rows, data_length, index_length, round(((data_length + index_length) / 1024 / 1024),2) as Size FROM information_schema.TABLES WHERE table_schema = \"tshock\" and table_name = \"logs\"";
+                try
+                {
+                    using (var reader = TShock.DB.QueryReader(sql))
+                    {
+                        if (reader.Read())
+                        {
+                            dbStat.TableRows = reader.Get<int>("Rows");
+                            dbStat.TableSize = reader.Get<double>("Size");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    TShock.Log.Error(ex.ToString());
+                    Console.WriteLine(ex.StackTrace);
+                }
+                sql = "select count(id) as Count, year(timestamp) as Year, month(TimeStamp) as Month from logs group by year(timestamp), month(TimeStamp)";
 
-            List<LogStat> Loglist = new List<LogStat>();
+                List<LogStat> Loglist = new List<LogStat>();
+                try
+                {
+                    using (var reader = TShock.DB.QueryReader(sql))
+                    {
+                        if (reader.Read())
+                        {
+                            rec = new LogStat(reader.Get<Int32>("Count"), reader.Get<Int32>("Year"), reader.Get<Int32>("Month"));
+                            Loglist.Add(rec);
+                        }
+                    }
+                    return new RestObject() { { "Rows", Loglist }, { "Stats", dbStat }, { "version", Assembly.GetExecutingAssembly().GetName().Version.ToString() } };
+                }
+                catch (Exception ex)
+                {
+                    TShock.Log.Error(ex.ToString());
+                    Console.WriteLine(ex.StackTrace);
+                }
+            }
+            else
+            {
+                dbStat.DBType = "SQLite";
+                dbStat.DBSize = 0;
+                dbStat.TableRows = 0;
+                dbStat.TableSize = 0;
+                sql = "SELECT count(*) as Rows FROM Logs";
+                try
+                {
+                    using (var reader = TShock.DB.QueryReader(sql))
+                    {
+                        if (reader.Read())
+                        {
+                            dbStat.TableRows = reader.Get<int>("Rows");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    TShock.Log.Error(ex.ToString());
+                    Console.WriteLine(ex.StackTrace);
+                }
+
+                sql = "select count(id) as Count, strftime('%Y',timestamp) as Year, strftime('%Y',TimeStamp) as Month from logs group by strftime('%Y',timestamp), strftime('%Y',TimeStamp)";
+
+                List<LogStat> Loglist = new List<LogStat>();
             try
             {
                 using (var reader = TShock.DB.QueryReader(sql))
                 {
                     if (reader.Read())
                     {
-                        rec = new LogStat(reader.Get<Int32>("Count"), reader.Get<Int32>("Year"), reader.Get<Int32>("Month"));
+                        rec = new LogStat(reader.Get<Int32>("Count"), Convert.ToInt32(reader.Get<string>("Year")), Convert.ToInt32(reader.Get<string>("Month")));
                         Loglist.Add(rec);
                     }
                 }
-                return new RestObject() { { "Rows", Loglist }, {"Stats", dbStat} };
+                return new RestObject() { { "Rows", Loglist }, { "Stats", dbStat }, { "version", Assembly.GetExecutingAssembly().GetName().Version.ToString() } };
             }
             catch (Exception ex)
             {
                 TShock.Log.Error(ex.ToString());
                 Console.WriteLine(ex.StackTrace);
+            }
             }
             return null;
         }
 
         public static RestObject getRows(RestRequestArgs args)
         {
-            if (TShock.DB.GetSqlType() == SqlType.Sqlite)
-                return new RestObject("400") { Response = "Not allowed using SQLLite database", };
             if (!TShock.Config.UseSqlLogs)
                 return new RestObject("400") { Response = "UseSqlLogs not set to true.", };
 
@@ -170,8 +216,6 @@ namespace SQLLoggerRest
         }
         public static RestObject deleteRows(RestRequestArgs args)
         {
-            if (TShock.DB.GetSqlType() == SqlType.Sqlite)
-                return new RestObject("400") { Response = "Not allowed using SQLLite database", };
             if (!TShock.Config.UseSqlLogs)
                 return new RestObject("400") { Response = "UseSqlLogs not set to true.", };
 
@@ -179,8 +223,7 @@ namespace SQLLoggerRest
             if (sqlString == null)
                 sqlString = "";
 
-            string sql = "DELETE FROM tshock.logs WHERE id in " + sqlString;
-            Console.WriteLine("1>" + sql);
+            string sql = "DELETE FROM logs WHERE id in " + sqlString;
             try
             {
                 TShock.DB.Query(sql);
@@ -256,19 +299,22 @@ namespace SQLLoggerRest
         public double DBSize { get; set; }
         public int TableRows { get; set; }
         public double TableSize { get; set; }
+        public string DBType { get; set; }
 
-        public DatabaseStat(double dbSize, int tableRows, double tableSize)
+        public DatabaseStat(double dbSize, int tableRows, double tableSize, string dbType)
         {
             DBSize = dbSize;
             TableRows = tableRows;
             TableSize = tableSize;
-        }
+            DBType = dbType;
+         }
 
         public DatabaseStat()
         {
             DBSize = 0;
             TableRows = 0;
             TableSize = 0;
+            DBType = "";
         }
     }
     public class LogStat
@@ -276,7 +322,7 @@ namespace SQLLoggerRest
         public int Count { get; set; }
         public int Year { get; set; }
         public int Month { get; set; }
-
+ 
         public LogStat(int count, int year, int month)
         {
             Count = count;
