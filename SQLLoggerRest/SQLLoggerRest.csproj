@@ -31,25 +31,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HttpServer">
-      <HintPath>DLLS\HttpServer.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\ref\HttpServer.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Data.Sqlite">
-      <HintPath>DLLS\Mono.Data.Sqlite.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\ref\Mono.Data.Sqlite.dll</HintPath>
     </Reference>
     <Reference Include="MySql.Data">
-      <HintPath>DLLS\MySql.Data.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\ref\MySql.Data.dll</HintPath>
     </Reference>
-    <Reference Include="MySql.Web">
-      <HintPath>DLLS\MySql.Web.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>DLLS\Newtonsoft.Json.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\ref\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -59,12 +50,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="TerrariaServer">
-      <HintPath>DLLS\TerrariaServer.exe</HintPath>
-      <Private>False</Private>
+      <HintPath>..\ref\TerrariaServer.exe</HintPath>
     </Reference>
     <Reference Include="TShockAPI">
-      <HintPath>DLLS\TShockAPI.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\ref\TShockAPI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

@@ -17,7 +17,7 @@ using TerrariaApi.Server;
 using Terraria;
 namespace SQLLoggerRest
 {
-    [ApiVersion(1, 17)]
+    [ApiVersion(1, 26)]
     public class SQLLogger : TerrariaPlugin
     {
 
@@ -86,7 +86,7 @@ namespace SQLLoggerRest
                     TShock.Log.Error(ex.ToString());
                     Console.WriteLine(ex.StackTrace);
                 }
-                sql = "SELECT table_rows as Rows, data_length, index_length, round(((data_length + index_length) / 1024 / 1024),2) as Size FROM information_schema.TABLES WHERE table_schema = \"tshock\" and table_name = \"logs\"";
+                sql = "SELECT table_rows as Rows, data_length, index_length, round(((data_length + index_length) / 1024 / 1024),2) as Size FROM information_schema.TABLES WHERE table_schema = \"tshock\" and table_name = \"Logs\"";
                 try
                 {
                     using (var reader = TShock.DB.QueryReader(sql))
@@ -103,7 +103,7 @@ namespace SQLLoggerRest
                     TShock.Log.Error(ex.ToString());
                     Console.WriteLine(ex.StackTrace);
                 }
-                sql = "select count(id) as Count, year(timestamp) as Year, month(TimeStamp) as Month from logs group by year(timestamp), month(TimeStamp)";
+                sql = "select count(id) as Count, year(timestamp) as Year, month(TimeStamp) as Month from Logs group by year(timestamp), month(TimeStamp)";
 
                 List<LogStat> Loglist = new List<LogStat>();
                 try
@@ -147,7 +147,7 @@ namespace SQLLoggerRest
                     Console.WriteLine(ex.StackTrace);
                 }
 
-                sql = "select count(id) as Count, strftime('%Y',timestamp) as Year, strftime('%Y',TimeStamp) as Month from logs group by strftime('%Y',timestamp), strftime('%Y',TimeStamp)";
+                sql = "select count(id) as Count, strftime('%Y',timestamp) as Year, strftime('%Y',TimeStamp) as Month from Logs group by strftime('%Y',timestamp), strftime('%Y',TimeStamp)";
 
                 List<LogStat> Loglist = new List<LogStat>();
             try
@@ -191,7 +191,7 @@ namespace SQLLoggerRest
         public static List<Log> GetRows(string search)
         {
             Log rec;
-            string sql = "SELECT * FROM logs " + search;
+            string sql = "SELECT * FROM Logs " + search;
 
             List<Log> Loglist = new List<Log>();
             try
@@ -223,7 +223,7 @@ namespace SQLLoggerRest
             if (sqlString == null)
                 sqlString = "";
 
-            string sql = "DELETE FROM logs WHERE id in " + sqlString;
+            string sql = "DELETE FROM Logs WHERE id in " + sqlString;
             try
             {
                 TShock.DB.Query(sql);
